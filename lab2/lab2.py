@@ -236,11 +236,22 @@ def LU(A):
             L_res.append(L[i][0][j] + L[i][1][j])
 
     return [L_res, U_res]
+
+def determinant(A):
+    if len(A) != len(A[0]):
+        print("Error")
+        return 0
+    L, U = LU(A)
+    res = 1
+    for i in range(len(A)):
+        res *= L[i][i] * U[i][i]
+    return res
+
 def error(A, B):
     return (np.linalg.norm(A - B, 'fro') / np.linalg.norm(B, 'fro'))*100
 
 
-A = generate_matrix(8)
+A = generate_matrix(16)
 # A = [[2, 1, 4, 2],
 #      [4, 4, 3, 0],
 #      [0, 1, 0, 1],
@@ -259,12 +270,15 @@ A = generate_matrix(8)
 
 show_matrix(A)
 
-L, U = doolittle_LU(A)
-L_res, U_res = LU(A)
+# L, U = doolittle_LU(A)
+# L_res, U_res = LU(A)
+#
+# print("===============================")
+# show_matrix(L)
+# show_matrix(L_res)
+# print("=================")
+# show_matrix(U)
+# show_matrix(U_res)
 
-print("===============================")
-show_matrix(L)
-show_matrix(L_res)
-print("=================")
-show_matrix(U)
-show_matrix(U_res)
+print(np.linalg.det(A))
+print(determinant(A))
