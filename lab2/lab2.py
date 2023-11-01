@@ -184,7 +184,7 @@ def inverse(A):
 
 
 def error(A, B):
-    return round((np.linalg.norm(A - B, 'fro') / np.linalg.norm(B, 'fro'))*100, 2)
+    return (np.linalg.norm(A - B, 'fro') / np.linalg.norm(B, 'fro'))*100
 
 
 A = generate_matrix(8)
