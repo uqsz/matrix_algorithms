@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import time
 import numpy as np
 
-
 def generate_matrix(n):  # generates n-size matrix with numbers from range ( 10^(-8);1 )
     eps = np.finfo(float).eps
     # return [[random.uniform(10 ** -8 + eps, 1.0 - eps) for _ in range(n)]
@@ -182,7 +181,61 @@ def inverse(A):
             res.append(B[i][0][j] + B[i][1][j])
     return res
 
+def doolittle_LU(A):
+    n = len(A)
+    L = [[0 for _ in range(n)] for _ in range(n)]
+    U = [[0 for _ in range(n)] for _ in range(n)]
 
+    for i in range(n):
+        L[i][i] = 1
+
+    for i in range(n):
+        for j in range(i, n):
+            tmp = 0
+            for k in range(i):
+                tmp += L[i][k] * U[k][j]
+            U[i][j] = A[i][j] - tmp
+
+        for j in range(i + 1, n):
+            tmp = 0
+            for k in range(i):
+                tmp += L[j][k] * U[k][i]
+            L[j][i] = (A[j][i] - tmp) / U[i][i]
+
+    return [L, U]
+
+def LU(A):
+    n = len(A)
+    if n == 2:
+        return doolittle_LU(A)
+
+    A11 = [row[:n // 2] for row in A[:n // 2]]
+    A12 = [row[n // 2:] for row in A[:n // 2]]
+    A21 = [row[:n // 2] for row in A[n // 2:]]
+    A22 = [row[n // 2:] for row in A[n // 2:]]
+
+    L11, U11 = LU(A11)
+    U11_inv = inverse(U11)
+    L21 = mul_matrix(A21, U11_inv)
+    L11_inv = inverse(L11)
+    U12 = mul_matrix(L11_inv, A12)
+    S = sub_matrix(A22, mul_matrix(mul_matrix(mul_matrix(A21, U11_inv), L11_inv), A12))
+    L22, U22 = LU(S)
+
+    U = [[U11, U12], [[[0 for _ in range(n - len(U22))] for _ in range(n - len(U22))], U22]]
+    L = [[L11, [[0 for _ in range(n - len(L11))] for _ in range(n - len(L11))]], [L21, L22]]
+
+    U_res = []
+    for i in range(2):
+        for j in range(len(U[i][0])):
+            U_res.append(U[i][0][j] + U[i][1][j])
+
+    L_res = []
+    for i in range(2):
+        for j in range(len(L[i][0])):
+            L_res.append(L[i][0][j] + L[i][1][j])
+
+    return [L_res, U_res]
 def error(A, B):
     return (np.linalg.norm(A - B, 'fro') / np.linalg.norm(B, 'fro'))*100
 
@@ -194,12 +247,24 @@ A = generate_matrix(8)
 #      [1, 1, 3, 3]]
 # A = [[1, 2, 3, 4], [2, 3, 4, 5], [3, 2, 3, 4], [1, 2, 5, 1]]
 
-C = inverse(A)
-D = np.linalg.inv(A)
+# C = inverse(A)
+# D = np.linalg.inv(A)
 
 # show_matrix_round(B)
-show_matrix_round(C)
-show_matrix_round(D)
+# show_matrix_round(C)
+# show_matrix_round(D)
 
-print(error(C, D), "%")
+# print(error(C, D), "%")
 # print(error(B, D),"%")
+
+show_matrix(A)
+
+L, U = doolittle_LU(A)
+L_res, U_res = LU(A)
+
+print("===============================")
+show_matrix(L)
+show_matrix(L_res)
+print("=================")
+show_matrix(U)
+show_matrix(U_res)
