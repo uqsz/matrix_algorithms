@@ -39,7 +39,7 @@ def add_matrix(A, B):  # adds two matrices
     for i in range(len(A)):
         for j in range(len(A[0])):
             C[i][j] = A[i][j] + B[i][j]
-            # cnt_a += 1
+            cnt_a += 1
     return C
 
 
@@ -51,7 +51,7 @@ def sub_matrix(A, B):  # substracts two matrices
         for i in range(len(B)):
             for j in range(len(B[0])):
                 C[i][j] = -B[i][j]
-                # cnt_a += 1
+                cnt_a += 1
         return C
     if (B == [[]]):
         return A
@@ -60,7 +60,7 @@ def sub_matrix(A, B):  # substracts two matrices
     for i in range(len(A)):
         for j in range(len(A[0])):
             C[i][j] = A[i][j] - B[i][j]
-            # cnt_a += 1
+            cnt_a += 1
     return C
 
 
@@ -74,7 +74,7 @@ def neg_matrix(A):
 
 
 def mul_matrix(A, B):
-    # global cnt_m, cnt_a
+    global cnt_m, cnt_a
     n = len(A)
     m = len(B)
     l = len(B[0])
@@ -87,8 +87,8 @@ def mul_matrix(A, B):
         for i in range(n):
             for j in range(m):
                 C[i][0] += A[i][j] * B[j][0]
-                # cnt_m += 1
-                # cnt_a += 1
+                cnt_m += 1
+                cnt_a += 1
         return C
 
     if n == 1:
@@ -96,8 +96,8 @@ def mul_matrix(A, B):
         for i in range(m):
             for j in range(l):
                 C[0][j] += A[0][i] * B[i][j]
-                # cnt_m += 1
-                # cnt_a += 1
+                cnt_m += 1
+                cnt_a += 1
         return C
 
     A1 = [row[:m // 2] for row in A[:n // 2]]
@@ -241,44 +241,134 @@ def determinant(A):
     if len(A) != len(A[0]):
         print("Error")
         return 0
+    global cnt_m
     L, U = LU(A)
     res = 1
     for i in range(len(A)):
         res *= L[i][i] * U[i][i]
+        cnt_m += 2
     return res
 
 def error(A, B):
     return (np.linalg.norm(A - B, 'fro') / np.linalg.norm(B, 'fro'))*100
 
 
-A = generate_matrix(16)
-# A = [[2, 1, 4, 2],
-#      [4, 4, 3, 0],
-#      [0, 1, 0, 1],
-#      [1, 1, 3, 3]]
-# A = [[1, 2, 3, 4], [2, 3, 4, 5], [3, 2, 3, 4], [1, 2, 5, 1]]
+def test(n):  # test function
+    n_test = n
+    tab_k = np.zeros(n_test)
+    inverse_time = []
+    LU_time = []
+    determinant_time = []
+    inverse_a = []
+    LU_a = []
+    determinant_a = []
+    inverse_m = []
+    LU_m = []
+    determinant_m = []
+    inverse_all = []
+    LU_all = []
+    determinant_all = []
 
-# C = inverse(A)
-# D = np.linalg.inv(A)
+    for k in range(2, 2 + n_test):
+        global cnt_m, cnt_a
 
-# show_matrix_round(B)
-# show_matrix_round(C)
-# show_matrix_round(D)
+        tab_k[k - 2] = k
+        n = 2 ** k
 
-# print(error(C, D), "%")
-# print(error(B, D),"%")
+        A = generate_matrix(n)
 
-show_matrix(A)
+        # inverse matrix test
+        cnt_a = 0
+        cnt_m = 0
 
-# L, U = doolittle_LU(A)
-# L_res, U_res = LU(A)
-#
-# print("===============================")
-# show_matrix(L)
-# show_matrix(L_res)
-# print("=================")
-# show_matrix(U)
-# show_matrix(U_res)
+        start = time.time()
+        inverse(A)
+        end = time.time()
 
-print(np.linalg.det(A))
-print(determinant(A))
+        inverse_time.append(end - start)
+        inverse_a.append(cnt_a)
+        inverse_m.append(cnt_m)
+        inverse_all.append(cnt_a + cnt_m)
+
+        # LU test
+        cnt_a = 0
+        cnt_m = 0
+
+        start = time.time()
+        LU(A)
+        end = time.time()
+
+        LU_time.append(end - start)
+        LU_a.append(cnt_a)
+        LU_m.append(cnt_m)
+        LU_all.append(cnt_a + cnt_m)
+
+        # determinant test
+        cnt_a = 0
+        cnt_m = 0
+
+        start = time.time()
+        determinant(A)
+        end = time.time()
+
+        determinant_time.append(end - start)
+        determinant_a.append(cnt_a)
+        determinant_m.append(cnt_m)
+        determinant_all.append(cnt_a + cnt_m)
+
+    plt.clf()
+    plt.plot(tab_k, inverse_time, 'o-')
+    plt.title("Czas obliczania odwrotności od rozmiaru macierzy (2^k x 2^k)")
+    plt.xlabel("k")
+    plt.ylabel("Czas [s]")
+    plt.savefig("inverse_time.png")
+
+    plt.clf()
+    plt.plot(tab_k, inverse_a, 'o-', label="dodawanie")
+    plt.plot(tab_k, inverse_m, 'o-', label="mnożenie")
+    plt.plot(tab_k, inverse_all, 'o-', label="łącznie")
+    plt.legend()
+    plt.title("Liczba operacji od rozmiaru macierzy (2^k x 2^k)")
+    plt.xlabel("k")
+    plt.ylabel("Ilość operacji (zlogarytmizowana)")
+    plt.semilogy()
+    plt.savefig("inverse_operations.png")
+
+    plt.clf()
+    plt.plot(tab_k, LU_time, 'o-')
+    plt.title("Czas obliczania faktoryzacji LU od rozmiaru macierzy (2^k x 2^k)")
+    plt.xlabel("k")
+    plt.ylabel("Czas [s]")
+    plt.savefig("LU_time.png")
+
+    plt.clf()
+    plt.plot(tab_k, LU_a, 'o-', label="dodawanie")
+    plt.plot(tab_k, LU_m, 'o-', label="mnożenie")
+    plt.plot(tab_k, LU_all, 'o-', label="łącznie")
+    plt.legend()
+    plt.title("Liczba operacji od rozmiaru macierzy (2^k x 2^k)")
+    plt.xlabel("k")
+    plt.ylabel("Ilość operacji (zlogarytmizowana)")
+    plt.semilogy()
+    plt.savefig("LU_operations.png")
+
+    plt.clf()
+    plt.plot(tab_k, determinant_time, 'o-')
+    plt.title("Czas obliczania wyznacznika od rozmiaru macierzy (2^k x 2^k)")
+    plt.xlabel("k")
+    plt.ylabel("Czas [s]")
+    plt.savefig("determinant_time.png")
+
+    plt.clf()
+    plt.plot(tab_k, determinant_a, 'o-', label="dodawanie")
+    plt.plot(tab_k, determinant_m, 'o-', label="mnożenie")
+    plt.plot(tab_k, determinant_all, 'o-', label="łącznie")
+    plt.legend()
+    plt.title("Liczba operacji od rozmiaru macierzy (2^k x 2^k)")
+    plt.xlabel("k")
+    plt.ylabel("Ilość operacji (zlogarytmizowana)")
+    plt.semilogy()
+    plt.savefig("determinant_operations.png")
+
+if __name__ == "__main__":
+    test(8)
