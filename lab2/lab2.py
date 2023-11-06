@@ -3,24 +3,25 @@ import matplotlib.pyplot as plt
 import time
 import numpy as np
 
+
 def generate_matrix(n):  # generates n-size matrix with numbers from range ( 10^(-8);1 )
     eps = np.finfo(float).eps
-    # return [[random.uniform(10 ** -8 + eps, 1.0 - eps) for _ in range(n)]
-    #         for _ in range(n)]
-    return [[random.randint(0, 100) for _ in range(n)] for _ in range(n)]
+    return [[random.uniform(10 ** -8 + eps, 1.0 - eps) for _ in range(n)]
+            for _ in range(n)]
+    # return [[random.randint(0, 100) for _ in range(n)] for _ in range(n)]
 
 
-def generate_identity(n):
+def generate_identity(n):  # generates n-size identity matrix
     return [[1 if i == j else 0 for j in range(n)] for i in range(n)]
 
 
-def show_matrix(A):  # print matrix
+def show_matrix(A):  # prints matrix
     for l in A:
         print(l)
     print("")
 
 
-def show_matrix_round(A):
+def show_matrix_round(A):  # prints matrix with rounded values
     for row in A:
         formatted_row = ["{:.6f}".format(x) for x in row]
         print(formatted_row)
@@ -64,16 +65,14 @@ def sub_matrix(A, B):  # substracts two matrices
     return C
 
 
-def neg_matrix(A):
+def neg_matrix(A):  # negative of a matrix
     for i in range(len(A)):
         for j in range(len(A)):
             A[i][j] = -A[i][j]
     return A
 
-# multiplicates two matrices with Strassen's method
 
-
-def mul_matrix(A, B):
+def mul_matrix(A, B):  # multiplicates two matrices with Strassen's method
     global cnt_m, cnt_a
     n = len(A)
     m = len(B)
@@ -131,7 +130,8 @@ def mul_matrix(A, B):
     return res
 
 
-def gauss_inverse(A):
+def gauss_inverse(A):  # inversion of matrix with gaussian elimination
+    global cnt_m, cnt_a
     n = len(A)
     I = generate_identity(n)
     A = [A[i] + I[i] for i in range(n)]
@@ -139,19 +139,24 @@ def gauss_inverse(A):
         temp = A[i][i]
         for j in range(i, 2*n):
             A[i][j] /= temp
+            cnt_m += 1
         for j in range(i+1, n):
             temp = A[j][i]
             for k in range(i, 2*n):
                 A[j][k] -= temp*A[i][k]
+                cnt_m += 1
+                cnt_a += 1
     for i in range(n-1, -1, -1):
         for j in range(i-1, -1, -1):
             temp = A[j][i]
             for k in range(2*n-1, i-1, -1):
                 A[j][k] -= temp*A[i][k]
+                cnt_m += 1
+                cnt_a += 1
     return [A[i][n:] for i in range(n)]
 
 
-def inverse(A):
+def inverse(A):  # inversion of matrix with recursion
     n = len(A)
     if n == 2:
         return gauss_inverse(A)
@@ -181,6 +186,7 @@ def inverse(A):
             res.append(B[i][0][j] + B[i][1][j])
     return res
 
+
 def doolittle_LU(A):
     n = len(A)
     L = [[0 for _ in range(n)] for _ in range(n)]
@@ -204,6 +210,7 @@ def doolittle_LU(A):
 
     return [L, U]
 
+
 def LU(A):
     n = len(A)
     if n == 2:
@@ -219,11 +226,14 @@ def LU(A):
     L21 = mul_matrix(A21, U11_inv)
     L11_inv = inverse(L11)
     U12 = mul_matrix(L11_inv, A12)
-    S = sub_matrix(A22, mul_matrix(mul_matrix(mul_matrix(A21, U11_inv), L11_inv), A12))
+    S = sub_matrix(A22, mul_matrix(mul_matrix(
+        mul_matrix(A21, U11_inv), L11_inv), A12))
     L22, U22 = LU(S)
 
-    U = [[U11, U12], [[[0 for _ in range(n - len(U22))] for _ in range(n - len(U22))], U22]]
-    L = [[L11, [[0 for _ in range(n - len(L11))] for _ in range(n - len(L11))]], [L21, L22]]
+    U = [[U11, U12], [
+        [[0 for _ in range(n - len(U22))] for _ in range(n - len(U22))], U22]]
+    L = [[L11, [[0 for _ in range(n - len(L11))]
+                for _ in range(n - len(L11))]], [L21, L22]]
 
     U_res = []
     for i in range(2):
@@ -237,6 +247,7 @@ def LU(A):
 
     return [L_res, U_res]
 
+
 def determinant(A):
     if len(A) != len(A[0]):
         print("Error")
@@ -249,6 +260,7 @@ def determinant(A):
         cnt_m += 2
     return res
 
+
 def error(A, B):
     return (np.linalg.norm(A - B, 'fro') / np.linalg.norm(B, 'fro'))*100
 
@@ -256,16 +268,22 @@ def error(A, B):
 def test(n):  # test function
     n_test = n
     tab_k = np.zeros(n_test)
+
     inverse_time = []
+    inverse_gauss_time = []
     LU_time = []
     determinant_time = []
+
     inverse_a = []
+    inverse_gauss_a = []
     LU_a = []
     determinant_a = []
     inverse_m = []
+    inverse_gauss_m = []
     LU_m = []
     determinant_m = []
     inverse_all = []
+    inverse_gauss_all = []
     LU_all = []
     determinant_all = []
 
@@ -290,43 +308,58 @@ def test(n):  # test function
         inverse_m.append(cnt_m)
         inverse_all.append(cnt_a + cnt_m)
 
-        # LU test
+        # inverse matrix gaussian test
         cnt_a = 0
         cnt_m = 0
 
         start = time.time()
-        LU(A)
+        gauss_inverse(A)
         end = time.time()
 
-        LU_time.append(end - start)
-        LU_a.append(cnt_a)
-        LU_m.append(cnt_m)
-        LU_all.append(cnt_a + cnt_m)
+        inverse_gauss_time.append(end - start)
 
-        # determinant test
-        cnt_a = 0
-        cnt_m = 0
+        inverse_gauss_a.append(cnt_a)
+        inverse_gauss_m.append(cnt_m)
+        inverse_gauss_all.append(cnt_a + cnt_m)
 
-        start = time.time()
-        determinant(A)
-        end = time.time()
+        # # LU test
+        # cnt_a = 0
+        # cnt_m = 0
 
-        determinant_time.append(end - start)
-        determinant_a.append(cnt_a)
-        determinant_m.append(cnt_m)
-        determinant_all.append(cnt_a + cnt_m)
+        # start = time.time()
+        # LU(A)
+        # end = time.time()
+
+        # LU_time.append(end - start)
+        # LU_a.append(cnt_a)
+        # LU_m.append(cnt_m)
+        # LU_all.append(cnt_a + cnt_m)
+
+        # # determinant test
+        # cnt_a = 0
+        # cnt_m = 0
+
+        # start = time.time()
+        # determinant(A)
+        # end = time.time()
+
+        # determinant_time.append(end - start)
+        # determinant_a.append(cnt_a)
+        # determinant_m.append(cnt_m)
+        # determinant_all.append(cnt_a + cnt_m)
 
     plt.clf()
-    plt.plot(tab_k, inverse_time, 'o-')
+    plt.plot(tab_k, inverse_time, 'o-', label='Rekurencyjne')
+    plt.plot(tab_k, inverse_gauss_time, 'o-', label='Eliminacja Gaussa')
     plt.title("Czas obliczania odwrotności od rozmiaru macierzy (2^k x 2^k)")
     plt.xlabel("k")
     plt.ylabel("Czas [s]")
+    plt.legend()
     plt.savefig("inverse_time.png")
 
     plt.clf()
-    plt.plot(tab_k, inverse_a, 'o-', label="dodawanie")
-    plt.plot(tab_k, inverse_m, 'o-', label="mnożenie")
-    plt.plot(tab_k, inverse_all, 'o-', label="łącznie")
+    plt.plot(tab_k, inverse_all, 'o-', label="łącznie_inverse")
+    plt.plot(tab_k, inverse_gauss_all, 'o-', label="łącznie_gauss")
     plt.legend()
     plt.title("Liczba operacji od rozmiaru macierzy (2^k x 2^k)")
     plt.xlabel("k")
@@ -334,41 +367,53 @@ def test(n):  # test function
     plt.semilogy()
     plt.savefig("inverse_operations.png")
 
-    plt.clf()
-    plt.plot(tab_k, LU_time, 'o-')
-    plt.title("Czas obliczania faktoryzacji LU od rozmiaru macierzy (2^k x 2^k)")
-    plt.xlabel("k")
-    plt.ylabel("Czas [s]")
-    plt.savefig("LU_time.png")
+    # plt.clf()
+    # plt.plot(tab_k, inverse_a, 'o-', label="dodawanie")
+    # plt.plot(tab_k, inverse_m, 'o-', label="mnożenie")
+    # plt.plot(tab_k, inverse_all, 'o-', label="łącznie")
+    # plt.legend()
+    # plt.title("Liczba operacji od rozmiaru macierzy (2^k x 2^k)")
+    # plt.xlabel("k")
+    # plt.ylabel("Ilość operacji (zlogarytmizowana)")
+    # plt.semilogy()
+    # plt.savefig("inverse_operations.png")
 
-    plt.clf()
-    plt.plot(tab_k, LU_a, 'o-', label="dodawanie")
-    plt.plot(tab_k, LU_m, 'o-', label="mnożenie")
-    plt.plot(tab_k, LU_all, 'o-', label="łącznie")
-    plt.legend()
-    plt.title("Liczba operacji od rozmiaru macierzy (2^k x 2^k)")
-    plt.xlabel("k")
-    plt.ylabel("Ilość operacji (zlogarytmizowana)")
-    plt.semilogy()
-    plt.savefig("LU_operations.png")
+    # plt.clf()
+    # plt.plot(tab_k, LU_time, 'o-')
+    # plt.title("Czas obliczania faktoryzacji LU od rozmiaru macierzy (2^k x 2^k)")
+    # plt.xlabel("k")
+    # plt.ylabel("Czas [s]")
+    # plt.savefig("LU_time.png")
 
-    plt.clf()
-    plt.plot(tab_k, determinant_time, 'o-')
-    plt.title("Czas obliczania wyznacznika od rozmiaru macierzy (2^k x 2^k)")
-    plt.xlabel("k")
-    plt.ylabel("Czas [s]")
-    plt.savefig("determinant_time.png")
+    # plt.clf()
+    # plt.plot(tab_k, LU_a, 'o-', label="dodawanie")
+    # plt.plot(tab_k, LU_m, 'o-', label="mnożenie")
+    # plt.plot(tab_k, LU_all, 'o-', label="łącznie")
+    # plt.legend()
+    # plt.title("Liczba operacji od rozmiaru macierzy (2^k x 2^k)")
+    # plt.xlabel("k")
+    # plt.ylabel("Ilość operacji (zlogarytmizowana)")
+    # plt.semilogy()
+    # plt.savefig("LU_operations.png")
 
-    plt.clf()
-    plt.plot(tab_k, determinant_a, 'o-', label="dodawanie")
-    plt.plot(tab_k, determinant_m, 'o-', label="mnożenie")
-    plt.plot(tab_k, determinant_all, 'o-', label="łącznie")
-    plt.legend()
-    plt.title("Liczba operacji od rozmiaru macierzy (2^k x 2^k)")
-    plt.xlabel("k")
-    plt.ylabel("Ilość operacji (zlogarytmizowana)")
-    plt.semilogy()
-    plt.savefig("determinant_operations.png")
+    # plt.clf()
+    # plt.plot(tab_k, determinant_time, 'o-')
+    # plt.title("Czas obliczania wyznacznika od rozmiaru macierzy (2^k x 2^k)")
+    # plt.xlabel("k")
+    # plt.ylabel("Czas [s]")
+    # plt.savefig("determinant_time.png")
+
+    # plt.clf()
+    # plt.plot(tab_k, determinant_a, 'o-', label="dodawanie")
+    # plt.plot(tab_k, determinant_m, 'o-', label="mnożenie")
+    # plt.plot(tab_k, determinant_all, 'o-', label="łącznie")
+    # plt.legend()
+    # plt.title("Liczba operacji od rozmiaru macierzy (2^k x 2^k)")
+    # plt.xlabel("k")
+    # plt.ylabel("Ilość operacji (zlogarytmizowana)")
+    # plt.semilogy()
+    # plt.savefig("determinant_operations.png")
+
 
 if __name__ == "__main__":
-    test(8)
+    test(7)
