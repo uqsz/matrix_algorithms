@@ -52,11 +52,11 @@ def create_tree(t_min, t_max, s_min, s_max, r, eps):
         v.append(create_tree(t_new_max, t_max, s_new_max, s_max, r, eps))
         # TODO: połączyć macierze od dzieci w jedną macierz
         # v.children.sort(key=lambda x : (x.U.shape[0], x.U.shape[1]))
-        print(v.children[0].U.shape, v.children[0].V.shape)
-        print(v.children[1].U.shape, v.children[1].V.shape)
-        print(v.children[2].U.shape, v.children[2].V.shape)
-        print(v.children[3].U.shape, v.children[3].V.shape)
-        print()
+        # print(v.children[0].U.shape, v.children[0].V.shape)
+        # print(v.children[1].U.shape, v.children[1].V.shape)
+        # print(v.children[2].U.shape, v.children[2].V.shape)
+        # print(v.children[3].U.shape, v.children[3].V.shape)
+        # print()
 
         v.U = np.vstack([np.hstack([v.children[0].U, v.children[1].U]), np.hstack(
             [v.children[2].U, v.children[3].U])])
@@ -75,7 +75,10 @@ def compress_matrix(t_min, t_max, s_min, s_max, U, D, V, r):
     v.sv = D[:r+1]
     v.U = U[0:, :r + 1]
     v.V = np.diag(D[:r + 1]) @ V[:r + 1, :]
-    print(v.V)
+    print(np.diag(D[:r + 1]))
+    print(V[:r + 1, :])
+    print(np.diag(D[:r + 1]) @ V[:r + 1, :])
+    print("?")
     # normalnie byłoby V[:r+1, :], ale tak jest w pseudokodzie
     # przez to w obliczaniu B mamy poprostu U @ V, a nie U @ np.diag(D) @ V
     return v
