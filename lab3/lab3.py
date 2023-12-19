@@ -3,6 +3,8 @@ import random
 from sklearn.utils.extmath import randomized_svd
 import time
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+
 random.seed(100)
 
 
@@ -31,12 +33,15 @@ def generate_matrix(n, proc):  # generates n-size matrix with numbers from range
 
 
 def create_tree(t_min, t_max, s_min, s_max, r, eps):
+    global ax
     U, D, V = randomized_svd(
         A[t_min:t_max, s_min:s_max], n_components=r+1, random_state=0)
     if len(D) <= r or D[r] < eps:
+        draw_black((t_min, s_min), (t_max, s_max), ax)
         v = compress_matrix(t_min, t_max, s_min, s_max, U, D, V, r)
 
     else:
+        draw_cross_with_square((t_min, s_min), (t_max, s_max), ax)
         v = Node((t_min, t_max, s_min, s_max))
         t_new_max = t_min + (t_max - t_min) // 2
         s_new_max = s_min + (s_max - s_min) // 2
@@ -70,70 +75,110 @@ def decompress(B, v):
     return B
 
 
+def draw_cross_with_square(left_top, right_bottom, ax):
+
+    center_x = (left_top[0] + right_bottom[0]) / 2
+    center_y = (left_top[1] + right_bottom[1]) / 2
+
+    width = right_bottom[0] - left_top[0]
+    height = right_bottom[1] - left_top[1]
+
+    rect = patches.Rectangle(left_top, width, height,
+                             linewidth=0.5, edgecolor='black', facecolor='none')
+    ax.add_patch(rect)
+
+    cross_size = min(width, height)
+
+    ax.plot([center_x - cross_size / 2, center_x + cross_size / 2],
+            [center_y, center_y], color='black', linewidth=0.5)
+    ax.plot([center_x, center_x], [center_y - cross_size / 2,
+            center_y + cross_size / 2], color='black', linewidth=0.5)
+
+
+def draw_black(left_top, right_bottom, ax):
+    width = right_bottom[0] - left_top[0]
+    height = right_bottom[1] - left_top[1]
+
+    rect = patches.Rectangle(left_top, width*0.2, height,
+                             linewidth=0.5, color='black', facecolor='none')
+    ax.add_patch(rect)
+
+    rect = patches.Rectangle(right_bottom, -width, -height*0.2,
+                             linewidth=0.5, color='black', facecolor='none')
+    ax.add_patch(rect)
+
+
 random.seed(100)
-n = 2 ** 10
-selfvalues = []
-times = []
-errors = []
+n = 2 ** 8
 
 
 for l, proc in enumerate([1, 2, 5, 10, 20]):
     A = generate_matrix(n, proc)
-    B = np.zeros((n, n))
     U, D, V = randomized_svd(A, n_components=n, random_state=0)
+    for j, b in enumerate([1, 4]):
+        for k, i in enumerate([2, n//2 - 1, n - 1]):
+            global ax
+            fig, ax = plt.subplots(figsize=(10.24, 10.24))
+            v = create_tree(0, n, 0, n, b, D[i])
 
-    selfvalues.append(D)
+            ax.set_title(f'H-macierz: proc={proc}, b={b}, i={i}')
+            plt.savefig('lab3/rysownik/'+f'proc={proc}, b={b}, i={i}'+'.png')
+            plt.clf()
 
-    start_time = time.time()
-    v = create_tree(0, n, 0, n, 1, D[n-1])
-    end_time = time.time()
-
-    B = decompress(B, v)
-
-    times.append(end_time-start_time)
-    errors.append(np.sqrt(np.sum(np.power(A - B, 2))))
-    print(f"proc = {proc}, b = {1}, error = {errors[-1]}")
-    # for j, b in enumerate([1, 4]):
-    #     for k, i in enumerate([2, n//2 - 1, n - 1]):
-
-    #         v = create_tree(0, n, 0, n, b, D[i])
-
-    #         B = decompress(B, v)
-    #         err = np.sqrt(np.sum(np.power(A - B, 2)))
-
-    #         print(f"proc = {proc}, b = {b}, i = {i}, error = {err}")
+            print(f"proc = {proc}")
 
 
-fig, ax = plt.subplots()
-d = [1, 2, 5, 10, 20]
-for i, values in enumerate(selfvalues):
-    ax.plot(values, label=f'{d[i]}% wartości niezerowych')
+# for l, proc in enumerate([1, 2, 5, 10, 20]):
+#     A = generate_matrix(n, proc)
+#     B = np.zeros((n, n))
+#     U, D, V = randomized_svd(A, n_components=n, random_state=0)
 
-ax.set_xlabel('Indeks')
-ax.set_ylabel('Wartość')
-ax.set_title('Wartości osobliwe macierzy')
-ax.legend()
+#     selfvalues.append(D)
 
-plt.savefig('lab3/wartosci_wlasne.png')
+#     start_time = time.time()
+#     v = create_tree(0, n, 0, n, 1, D[n-1])
+#     end_time = time.time()
 
-d = ["1%", "2%", "5%", "10%", "20%"]
+#     B = decompress(B, v)
 
-fig, ax = plt.subplots()
-ax.bar(d, times)
+#     times.append(end_time-start_time)
+#     errors.append(np.sqrt(np.sum(np.power(A - B, 2))))
+#     print(f"proc = {proc}, b = {1}, error = {errors[-1]}")
 
-ax.set_xlabel('Procent wartości niezerowych')
-ax.set_ylabel('Czas (s)')
-ax.set_title('Czas kompresji')
-ax.legend()
 
-plt.savefig('lab3/czas_kompresji.png')
+# selfvalues = []
+# times = []
+# errors = []
+# fig, ax = plt.subplots()
+# d = [1, 2, 5, 10, 20]
+# for i, values in enumerate(selfvalues):
+#     ax.plot(values, label=f'{d[i]}% wartości niezerowych')
 
-fig, ax = plt.subplots()
-ax.bar(d, errors)
+# ax.set_xlabel('Indeks')
+# ax.set_ylabel('Wartość')
+# ax.set_title('Wartości osobliwe macierzy')
+# ax.legend()
 
-ax.set_xlabel('Procent wartości niezerowych')
-ax.set_ylabel('Wartosc')
-ax.set_title('MSE')
-ax.legend()
+# plt.savefig('lab3/wartosci_wlasne.png')
 
-plt.savefig('lab3/mse.png')
+# d = ["1%", "2%", "5%", "10%", "20%"]
+
+# fig, ax = plt.subplots()
+# ax.bar(d, times)
+
+# ax.set_xlabel('Procent wartości niezerowych')
+# ax.set_ylabel('Czas (s)')
+# ax.set_title('Czas kompresji')
+# ax.legend()
+
+# plt.savefig('lab3/czas_kompresji.png')
+
+# fig, ax = plt.subplots()
+# ax.bar(d, errors)
+
+# ax.set_xlabel('Procent wartości niezerowych')
+# ax.set_ylabel('Wartosc')
+# ax.set_title('MSE')
+# ax.legend()
+
+# plt.savefig('lab3/mse.png')
