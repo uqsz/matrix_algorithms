@@ -29,8 +29,9 @@ def generate_matrix(n, proc):  # generates n-size matrix with numbers from range
     return matrix
 
 
-n = 2 ** 10
+n = 2 ** 6
 A = generate_matrix(n, 5)
+C = generate_matrix(n, 5)
 r = np.linalg.matrix_rank(A)
 # print(A)
 
@@ -38,6 +39,7 @@ r = np.linalg.matrix_rank(A)
 def create_tree(t_min, t_max, s_min, s_max, r, eps):
     U, D, V = randomized_svd(
         A[t_min:t_max, s_min:s_max], n_components=r+1, random_state=0)
+    # print(t_min, t_max, s_min, s_max)
     if len(D) <= r or D[r] < eps:
         v = compress_matrix(t_min, t_max, s_min, s_max, U, D, V, r)
     else:
@@ -71,8 +73,9 @@ def compress_matrix(t_min, t_max, s_min, s_max, U, D, V, r):
         return v
     v = Node((t_min, t_max, s_min, s_max), r)
     v.sv = D[:r+1]
-    v.U = U[:, :r + 1]
+    v.U = U[0:, :r + 1]
     v.V = np.diag(D[:r + 1]) @ V[:r + 1, :]
+    print(v.V)
     # normalnie byłoby V[:r+1, :], ale tak jest w pseudokodzie
     # przez to w obliczaniu B mamy poprostu U @ V, a nie U @ np.diag(D) @ V
     return v
@@ -81,6 +84,7 @@ def compress_matrix(t_min, t_max, s_min, s_max, U, D, V, r):
 U, D, V = randomized_svd(A, n_components=n, random_state=0)
 # r to w pseudokodzie parametr b, eps to parametr sigma
 v = create_tree(0, n, 0, n, 1, D[n - 1])
+print(v.U)
 B = v.U @ v.V
 # print(A)
 # print(B)

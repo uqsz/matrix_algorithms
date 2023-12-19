@@ -1,1 +1,5 @@
-shape
+print(v.children[0].U.shape, v.children[0].V.shape)
+        print(v.children[1].U.shape, v.children[1].V.shape)
+        print(v.children[2].U.shape, v.children[2].V.shape)
+        print(v.children[3].U.shape, v.children[3].V.shape)
+        print()
