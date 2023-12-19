@@ -182,5 +182,5 @@ if __name__ == "__main__":
     n = 2 ** 6
     global ax
     fig, ax = plt.subplots(figsize=(10.24, 10.24))
-    show_matrices(n)
+    # show_matrices(n)
     # tests(n)
