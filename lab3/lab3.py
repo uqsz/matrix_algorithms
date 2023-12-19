@@ -31,6 +31,7 @@ def generate_matrix(n, proc):  # generates n-size matrix with numbers from range
 
 def create_tree(t_min, t_max, s_min, s_max, r, eps):
     global ax
+    global A
     U, D, V = randomized_svd(
         A[t_min:t_max, s_min:s_max], n_components=r+1, random_state=0)
     if len(D) <= r or D[r] < eps:
@@ -51,6 +52,7 @@ def create_tree(t_min, t_max, s_min, s_max, r, eps):
 
 
 def compress_matrix(t_min, t_max, s_min, s_max, U, D, V, r):
+    global A
     if np.all(A[t_min:t_max, s_min:s_max] == 0):
         v = Node((t_min, t_max, s_min, s_max))
         v.U = np.zeros((t_max - t_min, s_max - s_min))
@@ -100,6 +102,7 @@ def draw_black(left_top, right_bottom, ax):
 
 
 def show_matrices(n):  # rysownik
+    global A
     for l, proc in enumerate([1, 2, 5, 10, 20]):
         A = generate_matrix(n, proc)
         U, D, V = randomized_svd(A, n_components=n, random_state=0)
@@ -110,8 +113,8 @@ def show_matrices(n):  # rysownik
                 v = create_tree(0, n, 0, n, b, D[i])
 
                 ax.set_title(f'H-macierz: proc={proc}, b={b}, i={i}')
-                plt.savefig('lab3/rysownik/' +
-                            f'proc={proc}, b={b}, i={i}'+'.png')
+                # plt.savefig('lab3/rysownik/' +f'proc={proc}, b={b}, i={i}'+'.png')
+                plt.show()
                 plt.clf()
 
                 print(f"proc = {proc}")
@@ -122,6 +125,7 @@ def tests(n):  # ogolne testy
     times = []
     errors = []
     for l, proc in enumerate([1, 2, 5, 10, 20]):
+        global A
         A = generate_matrix(n, proc)
         B = np.zeros((n, n))
         U, D, V = randomized_svd(A, n_components=n, random_state=0)
@@ -138,42 +142,45 @@ def tests(n):  # ogolne testy
         errors.append(np.sqrt(np.sum(np.power(A - B, 2))))
         print(f"proc = {proc}, b = {1}, error = {errors[-1]}")
 
-        fig, ax = plt.subplots()
-        d = [1, 2, 5, 10, 20]
-        for i, values in enumerate(selfvalues):
-            ax.plot(values, label=f'{d[i]}% wartości niezerowych')
+    fig, ax = plt.subplots()
+    d = [1, 2, 5, 10, 20]
+    for i, values in enumerate(selfvalues):
+        ax.plot(values, label=f'{d[i]}% wartości niezerowych')
 
-        ax.set_xlabel('Indeks')
-        ax.set_ylabel('Wartość')
-        ax.set_title('Wartości osobliwe macierzy')
-        ax.legend()
+    ax.set_xlabel('Indeks')
+    ax.set_ylabel('Wartość')
+    ax.set_title('Wartości osobliwe macierzy')
+    ax.legend()
 
-        plt.savefig('lab3/wartosci_wlasne.png')
+    plt.show()
+    # plt.savefig('lab3/wartosci_wlasne.png')
 
-        d = ["1%", "2%", "5%", "10%", "20%"]
+    d = ["1%", "2%", "5%", "10%", "20%"]
 
-        fig, ax = plt.subplots()
-        ax.bar(d, times)
+    fig, ax = plt.subplots()
+    ax.bar(d, times)
 
-        ax.set_xlabel('Procent wartości niezerowych')
-        ax.set_ylabel('Czas (s)')
-        ax.set_title('Czas kompresji')
-        ax.legend()
+    ax.set_xlabel('Procent wartości niezerowych')
+    ax.set_ylabel('Czas (s)')
+    ax.set_title('Czas kompresji')
+    ax.legend()
 
-        plt.savefig('lab3/czas_kompresji.png')
+    # plt.savefig('lab3/czas_kompresji.png')
 
-        fig, ax = plt.subplots()
-        ax.bar(d, errors)
+    fig, ax = plt.subplots()
+    ax.bar(d, errors)
 
-        ax.set_xlabel('Procent wartości niezerowych')
-        ax.set_ylabel('Wartosc')
-        ax.set_title('MSE')
-        ax.legend()
+    ax.set_xlabel('Procent wartości niezerowych')
+    ax.set_ylabel('Wartosc')
+    ax.set_title('MSE')
+    ax.legend()
 
-        plt.savefig('lab3/mse.png')
+    # plt.savefig('lab3/mse.png')
 
 
 if __name__ == "__main__":
-    n = 2 ** 8
-    # show_matrices(n)
+    n = 2 ** 6
+    global ax
+    fig, ax = plt.subplots(figsize=(10.24, 10.24))
+    show_matrices(n)
     # tests(n)

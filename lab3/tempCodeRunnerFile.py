@@ -1,1 +1,2 @@
-fig, ax = plt.subplots(figsize=(10.24, 10.24))
+
+                             linewidth=0.5, color='black', facecolor='none')
