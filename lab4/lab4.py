@@ -1,3 +1,4 @@
+import random
 import matplotlib.pyplot as plt
 from scipy.sparse import lil_matrix, csr_matrix
 from scipy.sparse import lil_matrix, csr_matrix, csgraph
@@ -109,19 +110,26 @@ def plot_binary_matrix(matrix, x):
 
 def apply_permutation(matrix, permutation):
     n = len(matrix)
-    permuted_matrix = np.zeros((n, n))
+    permuted_matrix = np.zeros((n, n), dtype=type(matrix[0][0]))
 
     for i in range(n):
         for j in range(n):
-            permuted_matrix[i][j] = matrix[permutation[i]][permutation[j]]
+            permuted_matrix[i, j] = matrix[permutation[i]][permutation[j]]
 
     return permuted_matrix
 
 
 for k in range(2, 5):
     matrix = generate_3d_grid_matrix(k)
-    m = ReorderingSSM(matrix)
-    r = m.RCM()
-    permuted_matrix = apply_permutation(matrix, r)
     plot_binary_matrix(matrix, f"matrix{k}")
+    m = ReorderingSSM(matrix)
+    r = m.CM()
+    permuted_matrix = apply_permutation(matrix, r)
+
     plot_binary_matrix(permuted_matrix, f"permutated_matrix{k}")
+
+    m = ReorderingSSM(matrix)
+    r_rev = m.RCM()
+    reversed_permuted_matrix = apply_permutation(matrix, r_rev)
+    plot_binary_matrix(reversed_permuted_matrix,
+                       f"reversed_permutated_matrix{k}")
