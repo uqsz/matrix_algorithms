@@ -1,11 +1,12 @@
 import copy
 import random
 import matplotlib.pyplot as plt
+import networkx as nx
 from matplotlib import patches
 from scipy.sparse import lil_matrix, csr_matrix
 from scipy.sparse import lil_matrix, csr_matrix, csgraph
 import numpy as np
-from collections import deque as Queue
+from collections import deque as Queue, deque
 
 from sklearn.utils.extmath import randomized_svd
 
@@ -153,12 +154,6 @@ class ReorderingSSM:
             notVisited.sort(key=lambda x: (degrees[x], x))
             p = notVisited.pop(0)
             res.append(p)
-            # print("==============")
-            # print(*matrixCopy, sep="\n")
-            # print()
-            # print(degrees)
-            # print()
-            # print(notVisited)
             for i in range(self.n):
                 if matrixCopy[p][i] != 0:
                     matrixCopy[p][i] = 0
@@ -166,7 +161,6 @@ class ReorderingSSM:
                     degrees[i] -= 1
                     for j in range(i + 1, self.n):
                         if matrixCopy[p][j] != 0 and matrixCopy[i][j] == 0:
-                            # print("Hello", p, i, j)
                             matrixCopy[i][j] = 1
                             matrixCopy[j][i] = 1
                             degrees[i] += 1
@@ -210,6 +204,7 @@ class ReorderingSSM:
 def generate_3d_grid_matrix(k):
     size = 2**(3*k)
     matrix = [[0] * size for _ in range(size)]
+    eps = np.finfo(float).eps
 
     for i in range(size):
         x, y, z = np.unravel_index(i, (2**k, 2**k, 2**k))
@@ -222,7 +217,7 @@ def generate_3d_grid_matrix(k):
             if (dx != 0 or dy != 0 or dz != 0) and 0 <= x + dx < 2**k and 0 <= y + dy < 2**k and 0 <= z + dz < 2**k
         ]
         for neighbor in neighbors:
-            matrix[i][neighbor] = 1
+            matrix[i][neighbor] = random.uniform(10 ** -8 + eps, 1.0 - eps)
 
     return np.array(matrix)
 
@@ -325,4 +320,5 @@ def test(k):
 
 
 if __name__ == "__main__":
-    test(2)
+    for i in range(2, 5):
+        test(i)
