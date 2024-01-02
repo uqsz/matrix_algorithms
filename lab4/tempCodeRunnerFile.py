@@ -1,3 +1,11 @@
-m = ReorderingSSM(matrix)
+r = m.CM()
+    # permuted_matrix = apply_permutation(matrix, r)
+    # matrix_to_svd = copy.deepcopy(permuted_matrix)
+    # plot_binary_matrix(permuted_matrix, f"CM/CM{k}")
+    # show_matrices(f"CM/svd{k}", k)
 
-r = m.RCM()
+    # r = m.RCM()
+    # permuted_matrix = apply_permutation(matrix, r)
+    # matrix_to_svd = copy.deepcopy(permuted_matrix)
+    # plot_binary_matrix(permuted_matrix, f"RCM/RCM{k}")
+    # show_matrices(f"RCM/svd{k}", k)

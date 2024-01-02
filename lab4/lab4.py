@@ -24,6 +24,7 @@ class Node:
         self.children.append(node)
         node.parent = self
 
+
 def create_tree(t_min, t_max, s_min, s_max, r, eps):
     global ax
     global matrix_to_svd
@@ -58,6 +59,7 @@ def compress_matrix(t_min, t_max, s_min, s_max, U, D, V, r):
     v.U = U[:, :r + 1]
     v.V = np.diag(D[:r + 1]) @ V[:r + 1, :]
     return v
+
 
 def draw_cross_with_square(left_top, right_bottom, ax):
 
@@ -94,10 +96,12 @@ def show_matrices(name, k):  # rysownik
     fig, ax = plt.subplots(figsize=(10.24, 10.24))
     v = create_tree(0, n, 0, n, 1, D[n-1])
 
+    ax.invert_yaxis()
     ax.set_title(f'H-macierz: k={k}, b=1, i={n-1}')
     plt.savefig(f'graphs/{name}')
-    plt.show()
+    # plt.show()
     plt.clf()
+
 
 def findIndex(a, x):
     return next((i for i, item in enumerate(a) if item[0] == x), -1)
@@ -226,7 +230,7 @@ def generate_3d_grid_matrix(k):
 def plot_binary_matrix(matrix, name):
     plt.figure(figsize=(10, 10))
     plt.imshow(matrix, cmap='binary', interpolation='none', vmin=0, vmax=1)
-
+    # plt.show()
     plt.savefig("graphs/"+name)
 
 
@@ -239,6 +243,7 @@ def apply_permutation(matrix, permutation):
             permuted_matrix[i, j] = matrix[permutation[i]][permutation[j]]
 
     return permuted_matrix
+
 
 def test(k):
     global matrix_to_svd
@@ -265,7 +270,6 @@ def test(k):
     matrix_to_svd = copy.deepcopy(permuted_matrix)
     plot_binary_matrix(permuted_matrix, f"RCM/RCM{k}")
     show_matrices(f"RCM/svd{k}", k)
-
 
     # plot_binary_matrix(matrix, f"matrix{k}")
     # m = ReorderingSSM(matrix)
@@ -318,6 +322,7 @@ def test(k):
 # print()
 # print(matrix)
 # plot_binary_matrix(x, "minimum_degree_matrix2")
+
 
 if __name__ == "__main__":
     test(2)
