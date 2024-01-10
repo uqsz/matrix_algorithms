@@ -3,7 +3,7 @@ import random
 import matplotlib.pyplot as plt
 from matplotlib import patches
 import numpy as np
-from collections import deque as Queue, deque
+from collections import deque as Queue
 
 from sklearn.utils.extmath import randomized_svd
 
@@ -188,10 +188,9 @@ def generate_3d_grid_matrix(k):
             if (dx != 0 or dy != 0 or dz != 0) and 0 <= x + dx < 2**k and 0 <= y + dy < 2**k and 0 <= z + dz < 2**k
         ]
         for neighbor in neighbors:
-            matrix[i][neighbor] = random.uniform(10 ** -8 + eps, 1.0 - eps)
-
+            matrix[i][neighbor] = 1
+        matrix[i][i] = 1
     return np.array(matrix)
-
 
 def plot_binary_matrix(matrix, name):
     plt.figure(figsize=(10, 10))
