@@ -1,5 +1,6 @@
 import copy
 import random
+import time
 
 import numpy
 import numpy as np
@@ -57,6 +58,7 @@ def compress_matrix(t_min, t_max, s_min, s_max, U, D, V, r):
     v.V = np.diag(D[:r + 1]) @ V[:r + 1, :]
     return v
 
+
 def draw_cross_with_square(left_top, right_bottom, ax):
 
     center_x = (left_top[0] + right_bottom[0]) / 2
@@ -85,17 +87,14 @@ def draw_black(left_top, right_bottom, ax):
 
 
 def show_matrices(name, k):  # rysownik
-    global A
-    n = len(A)
-    U, D, V = randomized_svd(A, n_components=n, random_state=0)
+
     global ax
-    fig, ax = plt.subplots(figsize=(10.24, 10.24))
-    v = create_tree(0, n, 0, n, 1, D[n-1])
 
     ax.invert_yaxis()
-    ax.set_title(f'H-macierz: k={k}, b=1, i={n-1}')
-    plt.savefig(f'graphs/{name}')
+    ax.set_title(f'H-macierz: k={k}')
+    plt.savefig(f'lab5/graphs/{name}')
     plt.clf()
+
 
 def decompress(B, v):
     if v.children == []:
@@ -104,6 +103,14 @@ def decompress(B, v):
     for child in v.children:
         B = decompress(B, child)
     return B
+
+
+def plot_binary_matrix(matrix, name):
+    plt.figure(figsize=(10, 10))
+    plt.imshow(matrix, cmap='binary', interpolation='none', vmin=0, vmax=1)
+    plt.title(f'Macierz: k={k}')
+    plt.savefig("lab5/graphs/"+name)
+
 
 def generate_3d_grid_matrix(k):
     size = 2**(3*k)
@@ -121,8 +128,8 @@ def generate_3d_grid_matrix(k):
             if (dx != 0 or dy != 0 or dz != 0) and 0 <= x + dx < 2**k and 0 <= y + dy < 2**k and 0 <= z + dz < 2**k
         ]
         for neighbor in neighbors:
-            matrix[i][neighbor] = random.uniform(10 ** -8 + eps, 1.0 - eps)
-        matrix[i][i] = random.uniform(10 ** -8 + eps, 1.0 - eps)
+            matrix[i][neighbor] = 1
+        matrix[i][i] = 1
     return np.array(matrix)
 
 
@@ -133,7 +140,7 @@ def matrix_vector_mul(v, X):
         return v.U @ (v.V @ X)
     rows = len(X)
     X1 = X[:rows//2, :]
-    X2 = X[rows//2 : rows, :]
+    X2 = X[rows//2: rows, :]
     Y_11 = matrix_vector_mul(v.children[0], X1)
     Y_12 = matrix_vector_mul(v.children[1], X2)
     Y_21 = matrix_vector_mul(v.children[2], X1)
@@ -151,20 +158,55 @@ def matrix_vector_mul(v, X):
     return res
 
 
-np.random.seed(100)
-k = 4
-global A
-global ax
-A = generate_3d_grid_matrix(k)
-start_matrix = copy.deepcopy(A)
-n = len(A)
-m = 8
-fig, ax = plt.subplots()
-U, D, V = randomized_svd(A, n_components=n, random_state=0)
-v = create_tree(0, n, 0, n, 1, D[n - 1])
-vector = numpy.random.rand(n, m)
+if __name__ == "__main__":
+    K = [2, 3, 4]
+    T = []
+    E = []
+    global A
+    for k in K:
+        np.random.seed(100)
 
-res = matrix_vector_mul(v, vector)
-real_res = start_matrix @ vector
+        A = generate_3d_grid_matrix(k)
 
-print(np.sqrt(np.sum(np.power(res - real_res, 2))))
+        plot_binary_matrix(A, "macierz"+str(k))
+
+        start_matrix = copy.deepcopy(A)
+
+        n = len(A)
+        m = 8
+        global ax
+        fig, ax = plt.subplots(figsize=(10.24, 10.24))
+        # kompresja macierzy
+        U, D, V = randomized_svd(A, n_components=n, random_state=0)
+        v = create_tree(0, n, 0, n, 1, D[n - 1])
+        vector = numpy.random.rand(n, m)
+
+        show_matrices("h_macierz"+str(k), k)
+
+        # mnozenie przez wektor
+        start_time = time.time()
+        res = matrix_vector_mul(v, vector)
+        end_time = time.time()
+
+        T.append(end_time-start_time)
+
+        real_res = start_matrix @ vector
+        E.append(np.sqrt(np.sum(np.power(res - real_res, 2))))
+
+    plt.figure(figsize=(8, 6))
+    plt.semilogy(K, T, marker='o')
+    plt.title('Czas wykonania T(K)')
+    plt.xlabel('K')
+    plt.ylabel('Czas wykonania (s)')
+    plt.grid(True)
+    plt.xticks(K)
+    plt.savefig('lab5/graphs/czas_wykonania.png')
+
+    plt.figure(figsize=(8, 6))
+    plt.bar(K, E, color='blue', alpha=0.7)
+    plt.title(r'$||Ax - Hx||^2$ dla rozmiarów $2^{3k}$')
+    plt.xlabel('k')
+    plt.ylabel(r'$||Ax - Hx||^2$')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.xticks(K)
+    plt.savefig('lab5/graphs/mse.png')
